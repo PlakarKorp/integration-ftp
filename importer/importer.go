@@ -2,6 +2,7 @@ package importer
 
 import (
 	"context"
+	_ "embed"
 	"io"
 	"log"
 	"net/url"
@@ -9,6 +10,7 @@ import (
 	"path"
 	"sync"
 
+	sdk "github.com/PlakarKorp/go-kloset-sdk"
 	"github.com/PlakarKorp/integration-ftp/common"
 	"github.com/PlakarKorp/kloset/connectors"
 	"github.com/PlakarKorp/kloset/connectors/importer"
@@ -21,6 +23,12 @@ func init() {
 	importer.Register("ftp", 0, NewImporter)
 }
 
+type ImporterConfig struct {
+	Location string `json:"location"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 type Importer struct {
 	host     string
 	rootDir  string
@@ -30,36 +38,34 @@ type Importer struct {
 	client *goftp.Client
 }
 
+//go:embed schema.json
+var schema string
+
 func NewImporter(appCtx context.Context, opts *connectors.Options, name string, config map[string]string) (importer.Importer, error) {
-	target := config["location"]
-	parsed, err := url.Parse(target)
+	var cfg ImporterConfig
+	if err := sdk.DecodeConfig(schema, config, &cfg); err != nil {
+		return nil, err
+	}
+
+	parsed, err := url.Parse(cfg.Location)
 	if err != nil {
 		return nil, err
 	}
 
-	var username string
-	if tmp, ok := config["username"]; ok {
-		username = tmp
-	}
-	var password string
-	if tmp, ok := config["password"]; ok {
-		password = tmp
-	}
-
 	if parsed.User != nil {
 		if parsed.User.Username() != "" {
-			username = parsed.User.Username()
+			cfg.Username = parsed.User.Username()
 		}
 		if p, ok := parsed.User.Password(); ok {
-			password = p
+			cfg.Password = p
 		}
 	}
 
 	return &Importer{
 		host:     parsed.Host,
 		rootDir:  parsed.Path,
-		username: username,
-		password: password,
+		username: cfg.Username,
+		password: cfg.Password,
 	}, nil
 }
 

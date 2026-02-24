@@ -18,6 +18,7 @@ package exporter
 
 import (
 	"context"
+	_ "embed"
 	"errors"
 	"fmt"
 	"math/rand/v2"
@@ -25,6 +26,7 @@ import (
 	"os"
 	"path/filepath"
 
+	sdk "github.com/PlakarKorp/go-kloset-sdk"
 	"github.com/PlakarKorp/integration-ftp/common"
 	"github.com/PlakarKorp/kloset/connectors"
 	"github.com/PlakarKorp/kloset/connectors/exporter"
@@ -38,6 +40,12 @@ func init() {
 	exporter.Register("ftp", 0, NewExporter)
 }
 
+type ExporterConfig struct {
+	Location string `json:"location"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 type Exporter struct {
 	opts *connectors.Options
 
@@ -47,33 +55,30 @@ type Exporter struct {
 	endpoint *url.URL
 }
 
-func NewExporter(ctx context.Context, opts *connectors.Options, name string, config map[string]string) (exporter.Exporter, error) {
-	target := config["location"]
+//go:embed schema.json
+var schema string
 
-	parsed, err := url.Parse(target)
+func NewExporter(ctx context.Context, opts *connectors.Options, name string, config map[string]string) (exporter.Exporter, error) {
+	var cfg ExporterConfig
+	if err := sdk.DecodeConfig(schema, config, &cfg); err != nil {
+		return nil, err
+	}
+
+	parsed, err := url.Parse(cfg.Location)
 	if err != nil {
 		return nil, err
 	}
 
-	var username string
-	if tmp, ok := config["username"]; ok {
-		username = tmp
-	}
-	var password string
-	if tmp, ok := config["password"]; ok {
-		password = tmp
-	}
-
 	if parsed.User != nil {
 		if parsed.User.Username() != "" {
-			username = parsed.User.Username()
+			cfg.Username = parsed.User.Username()
 		}
 		if p, ok := parsed.User.Password(); ok {
-			password = p
+			cfg.Password = p
 		}
 	}
 
-	client, err := common.ConnectToFTP(parsed.Host, username, password)
+	client, err := common.ConnectToFTP(parsed.Host, cfg.Username, cfg.Password)
 	if err != nil {
 		return nil, err
 	}

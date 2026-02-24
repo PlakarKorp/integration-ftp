@@ -3,7 +3,7 @@ module github.com/PlakarKorp/integration-ftp
 go 1.24.0
 
 require (
-	github.com/PlakarKorp/go-kloset-sdk v1.1.0-beta.1
+	github.com/PlakarKorp/go-kloset-sdk v1.1.0-beta.1.0.20260224105957-73fc19d37843
 	github.com/PlakarKorp/kloset v1.1.0-beta.2
 	github.com/secsy/goftp v0.0.0-20200609142545-aa2de14babf4
 	golang.org/x/sync v0.19.0
@@ -20,6 +20,7 @@ require (
 	github.com/nickball/go-aes-key-wrap v0.0.0-20170929221519-1c3aa3e4dfc5 // indirect
 	github.com/pierrec/lz4/v4 v4.1.25 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
+	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2 // indirect
 	github.com/tink-crypto/tink-go/v2 v2.6.0 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
